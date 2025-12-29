@@ -208,4 +208,7 @@ main() {
     print_opencode_status
 }
 
-main
+# Only run main if script is executed directly, not when sourced
+if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+    main
+fi
