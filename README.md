@@ -60,7 +60,7 @@ tmux source-file ~/.tmux.conf
 Each tmux window shows its OpenCode state directly in the window name:
 
 ```
-[session] 0:frontend○ 1:backend● 2:docs◉
+[session] 0:frontend ○ 1:backend ● 2:docs ◉
 ```
 
 Perfect for the **one-window philosophy** - run one OpenCode per window and see all states in your window list!
@@ -119,7 +119,7 @@ set -g status-right '#{opencode_status} | %H:%M %d-%b'
 
 5. **See the magic:**
    ```
-   [session] 0:frontend○ 1:backend●
+   [session] 0:frontend ○ 1:backend ●
    ```
    
    Each window shows its own OpenCode state!

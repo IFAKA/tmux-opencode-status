@@ -10,8 +10,8 @@ source "$CURRENT_DIR/opencode_sessions.sh"
 # Get the base window name (without any existing state icon)
 get_base_window_name() {
     local window_name="$1"
-    # Remove any existing state icons (○●◉✗) from the end
-    echo "$window_name" | sed -E 's/[○●◉✗]$//'
+    # Remove any existing state icons (○●◉✗) and space from the end
+    echo "$window_name" | sed -E 's/ [○●◉✗]$//'
 }
 
 # Update window names with OpenCode states
@@ -47,8 +47,8 @@ update_window_names() {
             local state=$(detect_session_state "$pane_target")
             local icon=$(get_state_icon "$state")
             
-            # Update window name with icon
-            local new_name="${base_name}${icon}"
+            # Update window name with icon (space before icon for readability)
+            local new_name="${base_name} ${icon}"
             
             # Only update if name changed
             if [ "$current_name" != "$new_name" ]; then
