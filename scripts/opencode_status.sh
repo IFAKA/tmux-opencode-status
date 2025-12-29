@@ -2,7 +2,6 @@
 # Simple OpenCode state monitor for tmux window names
 # States: idle (○), busy (●), waiting (◉), error (✗)
 
-# Icons
 ICON_IDLE="○"
 ICON_BUSY="●"
 ICON_WAITING="◉"
@@ -15,13 +14,10 @@ detect_state() {
 
     [ -z "$lines" ] && echo "idle" && return
 
-    # Error
     if echo "$lines" | grep -qiE "(✗|error:|failed|exception|fatal|panic:)"; then
         echo "error"
-    # Permission/confirmation prompt
     elif echo "$lines" | grep -qiE "(\[Y/n\]|\[y/N\]|y/n|Allow|Deny|permission|approve|confirm)"; then
         echo "waiting"
-    # Busy/loading
     elif echo "$lines" | grep -qE "(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏|●|◐|◓|◑|◒|thinking|Thinking|Tool:|\.\.\.|\.\.\.$)"; then
         echo "busy"
     else
@@ -29,7 +25,6 @@ detect_state() {
     fi
 }
 
-# Get icon for state
 get_icon() {
     case "$1" in
         idle)    echo "$ICON_IDLE" ;;
@@ -40,9 +35,9 @@ get_icon() {
     esac
 }
 
-# Strip existing icon from window name
-strip_icon() {
-    echo "$1" | sed -E 's/ [○●◉✗]$//'
+# Strip all existing icons from window name
+strip_icons() {
+    echo "$1" | sed -E 's/ [○●◉✗]+$//'
 }
 
 # Check if pane runs opencode
@@ -58,22 +53,31 @@ is_opencode() {
     return 1
 }
 
-# Main: update all window names
+# Main: update window names with icons for each opencode pane
 main() {
     tmux list-windows -F "#{window_index} #{window_name}" | while read -r idx name; do
-        local pane_info=$(tmux list-panes -t ":$idx" -F "#{pane_id} #{pane_current_command} #{pane_pid}" | head -1)
-        local pane_id=$(echo "$pane_info" | awk '{print $1}')
-        local pane_cmd=$(echo "$pane_info" | awk '{print $2}')
-        local pane_pid=$(echo "$pane_info" | awk '{print $3}')
+        local icons=""
 
-        local base_name=$(strip_icon "$name")
+        # Check ALL panes in this window
+        while IFS= read -r pane_line; do
+            local pane_id=$(echo "$pane_line" | awk '{print $1}')
+            local pane_cmd=$(echo "$pane_line" | awk '{print $2}')
+            local pane_pid=$(echo "$pane_line" | awk '{print $3}')
 
-        if is_opencode "$pane_cmd" "$pane_pid"; then
-            local state=$(detect_state "$pane_id")
-            local icon=$(get_icon "$state")
-            local new_name="$base_name $icon"
+            if is_opencode "$pane_cmd" "$pane_pid"; then
+                local state=$(detect_state "$pane_id")
+                local icon=$(get_icon "$state")
+                icons="${icons}${icon}"
+            fi
+        done < <(tmux list-panes -t ":$idx" -F "#{pane_id} #{pane_current_command} #{pane_pid}")
+
+        local base_name=$(strip_icons "$name")
+
+        if [ -n "$icons" ]; then
+            local new_name="$base_name $icons"
             [ "$name" != "$new_name" ] && tmux rename-window -t ":$idx" "$new_name"
         else
+            # No opencode in this window - restore base name if needed
             [ "$name" != "$base_name" ] && tmux rename-window -t ":$idx" "$base_name"
         fi
     done
