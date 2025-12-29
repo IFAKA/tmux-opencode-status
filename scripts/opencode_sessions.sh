@@ -4,61 +4,77 @@ CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$CURRENT_DIR/helpers.sh"
 
 # State detection for OpenCode sessions
-# States: idle, busy, waiting, error, loading
+# States: idle, busy, waiting, error
 detect_session_state() {
     local pane_id="$1"
     local pane_content
+    local last_lines
     
-    # Capture last 50 lines of pane content
-    pane_content=$(tmux capture-pane -p -t "$pane_id" -S -50 2>/dev/null || echo "")
+    # Capture pane content - last 100 lines for context
+    pane_content=$(tmux capture-pane -p -t "$pane_id" -S -100 2>/dev/null || echo "")
+    last_lines=$(echo "$pane_content" | tail -20)
     
     # Check for various states (most specific first)
     
-    # Error state - look for error messages
-    if echo "$pane_content" | grep -qiE "(error|failed|exception|fatal)"; then
+    # Error state - look for error messages in recent output
+    if echo "$last_lines" | grep -qiE "(✗|error:|failed|exception|fatal|Error:|Failed)"; then
         echo "error"
         return
     fi
     
-    # Waiting for input - look for common prompts
-    if echo "$pane_content" | grep -qE "(y/n|yes/no|continue\?|proceed\?|\[Y/n\]|\(y/N\))"; then
+    # Waiting for input - look for permission prompts and confirmations
+    # OpenCode specific patterns: permission requests, y/n prompts
+    if echo "$last_lines" | grep -qiE "(y/n|yes/no|continue\?|proceed\?|\[Y/n\]|\(y/N\)|permission|allow|approve|confirm)"; then
         echo "waiting"
         return
     fi
     
-    # Loading/processing - look for progress indicators
-    if echo "$pane_content" | grep -qE "(loading|processing|running|executing|working|analyzing|searching)"; then
+    # Busy state - look for activity indicators
+    # Check for: spinners, "working", thinking indicators, tool execution
+    if echo "$last_lines" | grep -qiE "(●|◐|◓|◑|◒|⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏|loading|processing|running|executing|working|analyzing|searching|thinking|calling|invoking)"; then
         echo "busy"
         return
     fi
     
-    # Check if there's recent activity (OpenCode prompt visible)
-    if echo "$pane_content" | grep -qE "(opencode|claude|assistant|>|$)"; then
-        # Look for thinking/processing indicators
-        if echo "$pane_content" | tail -5 | grep -qE "\.\.\."; then
-            echo "busy"
-            return
-        fi
+    # Check for ellipsis/dots indicating processing
+    if echo "$last_lines" | grep -qE "\.\.\.|…"; then
+        echo "busy"
+        return
+    fi
+    
+    # Check cursor position - if at bottom with prompt, likely idle
+    # Look for common shell prompts or ready state
+    if echo "$last_lines" | tail -3 | grep -qE "(>|❯|\$|#|%)"; then
         echo "idle"
         return
     fi
     
-    # Default to idle
+    # Default to idle if we can't determine state
     echo "idle"
 }
 
 # Find all panes running OpenCode
 find_opencode_panes() {
-    local panes=()
-    
-    # Get all panes with their commands
+    # Get all panes and check for OpenCode processes
+    # Check both the command name and the full command line
+    tmux list-panes -a -F "#{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_pid}" | \
     while IFS= read -r line; do
-        # Format: window_index:pane_index command
-        panes+=("$line")
-    done < <(tmux list-panes -a -F "#{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_pid}" | \
-             grep -iE "(oc|opencode|claude|node.*opencode)" || true)
-    
-    printf '%s\n' "${panes[@]}"
+        local pane_target=$(echo "$line" | awk '{print $1}')
+        local pane_command=$(echo "$line" | awk '{print $2}')
+        local pane_pid=$(echo "$line" | awk '{print $3}')
+        
+        # Check if command matches OpenCode patterns
+        if echo "$pane_command" | grep -qiE "^(oc|opencode|node)$"; then
+            # For node processes, verify it's actually running OpenCode
+            if [ "$pane_command" = "node" ]; then
+                if ps -p "$pane_pid" -o command= 2>/dev/null | grep -qiE "(opencode|oc)"; then
+                    echo "$pane_target"
+                fi
+            else
+                echo "$pane_target"
+            fi
+        fi
+    done
 }
 
 # Get icon for state

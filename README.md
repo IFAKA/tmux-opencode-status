@@ -51,6 +51,25 @@ Reload tmux configuration:
 tmux source-file ~/.tmux.conf
 ```
 
+## Quick Start
+
+1. **Install the plugin** (see Installation section below)
+
+2. **Add to your `.tmux.conf`:**
+   ```tmux
+   set -g status-right '#{opencode_status} | %H:%M %d-%b-%y'
+   ```
+
+3. **Reload tmux config:**
+   ```bash
+   tmux source-file ~/.tmux.conf
+   ```
+
+4. **Start using OpenCode** in any tmux pane - the status bar will automatically show:
+   ```
+   OC:3 ○ ● ◉
+   ```
+
 ## Usage
 
 Add `#{opencode_status}` to your status bar in `.tmux.conf`:
@@ -76,6 +95,13 @@ This shows:
 - First session: idle (ready)
 - Second session: busy (processing)
 - Third session: waiting for input
+
+### State Meanings
+
+- **○ Idle (Green):** OpenCode is ready and waiting for your input
+- **● Busy (Yellow):** OpenCode is processing, thinking, or executing tools
+- **◉ Waiting (Cyan):** OpenCode is waiting for your confirmation (y/n prompts, permissions)
+- **✗ Error (Red):** An error occurred in the session
 
 ## Configuration
 
@@ -179,17 +205,49 @@ bind-key o run-shell "tmux list-panes -a -F '#{pane_id}' | xargs -I {} tmux capt
 
 ## Troubleshooting
 
+### Debug Mode
+
+Run the debug script to see detailed information about detected sessions:
+
+```bash
+~/.tmux/plugins/tmux-opencode-status/scripts/debug.sh
+```
+
+This will show:
+- Current tmux configuration
+- Plugin configuration
+- All tmux panes
+- Detected OpenCode panes
+- State detection for each pane
+- Final status output
+
+### Common Issues
+
 **No sessions detected:**
 - Ensure OpenCode is actually running in a tmux pane
-- Check that the process name matches expected patterns (oc, opencode, claude, node.*opencode)
+- Check that the process name matches expected patterns (oc, opencode, node)
+- Run the debug script to see all panes and their commands
+- Verify with: `ps aux | grep -i opencode`
 
 **States not updating:**
 - Increase update frequency with `set -g status-interval 5`
-- Check that pane content is accessible (not in alternate screen mode for some applications)
+- Check that pane content is accessible (not in alternate screen mode)
+- Run debug script to see current state detection
 
 **Icons not displaying:**
 - Ensure your terminal supports Unicode characters
-- Try simpler ASCII icons if Unicode doesn't work
+- Try simpler ASCII icons if Unicode doesn't work:
+  ```tmux
+  set -g @opencode_icon_idle "."
+  set -g @opencode_icon_busy "*"
+  set -g @opencode_icon_waiting "?"
+  set -g @opencode_icon_error "X"
+  ```
+
+**State detection seems wrong:**
+- The plugin analyzes pane content to detect states
+- Some applications may interfere with content capture
+- Try increasing the update interval for more accurate detection
 
 ## Contributing
 
