@@ -26,7 +26,7 @@ Monitor all your OpenCode/Claude Code sessions at a glance directly in your tmux
 Add to your `.tmux.conf`:
 
 ```tmux
-set -g @plugin 'yourusername/tmux-opencode-status'
+set -g @plugin 'IFAKA/tmux-opencode-status'
 ```
 
 Press `prefix + I` to fetch and source the plugin.
@@ -36,7 +36,7 @@ Press `prefix + I` to fetch and source the plugin.
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/tmux-opencode-status ~/.tmux/plugins/tmux-opencode-status
+git clone https://github.com/IFAKA/tmux-opencode-status ~/.tmux/plugins/tmux-opencode-status
 ```
 
 Add to your `.tmux.conf`:
