@@ -29,6 +29,13 @@ set -g @opencode_show_session_name "false"
 # Text to show when no sessions are running (empty = show nothing)
 set -g @opencode_no_session_text ""
 
+# --- Performance Options ---
+# Enable intelligent caching (recommended for better performance)
+set -g @opencode_enable_cache "true"
+
+# Cache validity period in seconds (how long to trust cached state)
+set -g @opencode_cache_ttl "5"
+
 # --- Icon Configuration ---
 # Default icons (Unicode circles)
 set -g @opencode_icon_idle "○"
@@ -77,8 +84,10 @@ set -g @opencode_color_error "red"
 # Status Bar Configuration
 # ============================================================================
 
-# Update status bar more frequently (default is 15 seconds)
-set -g status-interval 5
+# Update status bar interval (with caching, 10s is a good balance)
+# Faster = more responsive, Slower = less CPU
+# Options: 5 (responsive), 10 (balanced), 15 (efficient)
+set -g status-interval 10
 
 # Status bar positioning
 set -g status-position bottom
