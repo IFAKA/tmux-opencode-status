@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Testing
+test/
+*.test
+
+# Temp files
+*.tmp
