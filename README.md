@@ -1,14 +1,16 @@
 # tmux-opencode-status
 
-Monitor all your OpenCode/Claude Code sessions at a glance directly in your tmux status bar.
+Monitor all your OpenCode/Claude Code sessions at a glance - **directly in your tmux window tabs**.
 
 ## Features
 
+- **Window-Based Display:** Each tmux window shows its OpenCode state icon right in the tab name
 - **Visual State Indicators:** See which OpenCode sessions are idle, busy, waiting for input, or errored
-- **At-a-Glance Monitoring:** No need to split terminals or switch panes to check session status
-- **One-Line Display:** Compact, information-dense status bar integration
+- **At-a-Glance Monitoring:** No need to switch windows to check session status
+- **One-Window Philosophy:** Perfect for users who prefer multiple windows over split panes
 - **Customizable:** Configure icons, colors, and display format to match your style
 - **Lightweight:** Pure Bash, no dependencies, minimal performance impact
+- **Two Display Modes:** Window-based (recommended) or status bar (legacy)
 
 ## States
 
@@ -51,13 +53,52 @@ Reload tmux configuration:
 tmux source-file ~/.tmux.conf
 ```
 
-## Quick Start
+## Display Modes
+
+### Window-Based Display (Recommended)
+
+Each tmux window shows its OpenCode state directly in the window name:
+
+```
+[session] 0:frontend○ 1:backend● 2:docs◉
+```
+
+Perfect for the **one-window philosophy** - run one OpenCode per window and see all states in your window list!
+
+**Configuration:**
+```tmux
+set -g @plugin 'IFAKA/tmux-opencode-status'
+
+# Enable automatic window renaming
+setw -g automatic-rename on
+
+# Status bar runs the monitor (returns empty, updates window names)
+set -g status-right '#($HOME/.tmux/plugins/tmux-opencode-status/scripts/window_monitor.sh)%H:%M %d-%b'
+```
+
+### Status Bar Display (Legacy)
+
+Shows all OpenCode sessions in the status bar:
+
+```
+OC:3 ○ ● ◉ | 14:30
+```
+
+**Configuration:**
+```tmux
+set -g @plugin 'IFAKA/tmux-opencode-status'
+set -g status-right '#{opencode_status} | %H:%M %d-%b'
+```
+
+## Quick Start (Window-Based Display)
 
 1. **Install the plugin** (see Installation section below)
 
 2. **Add to your `.tmux.conf`:**
    ```tmux
-   set -g status-right '#{opencode_status} | %H:%M %d-%b-%y'
+   set -g @plugin 'IFAKA/tmux-opencode-status'
+   setw -g automatic-rename on
+   set -g status-right '#($HOME/.tmux/plugins/tmux-opencode-status/scripts/window_monitor.sh)%H:%M'
    ```
 
 3. **Reload tmux config:**
@@ -65,10 +106,23 @@ tmux source-file ~/.tmux.conf
    tmux source-file ~/.tmux.conf
    ```
 
-4. **Start using OpenCode** in any tmux pane - the status bar will automatically show:
+4. **Create windows and start OpenCode:**
+   ```bash
+   # Window 0
+   oc
+   # Name it: Ctrl+b then , → type "frontend"
+   
+   # Create new window: Ctrl+b then c
+   oc
+   # Name it: Ctrl+b then , → type "backend"
    ```
-   OC:3 ○ ● ◉
+
+5. **See the magic:**
    ```
+   [session] 0:frontend○ 1:backend●
+   ```
+   
+   Each window shows its own OpenCode state!
 
 ## Usage
 
