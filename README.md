@@ -60,7 +60,7 @@ tmux source-file ~/.tmux.conf
 Each tmux window shows its OpenCode state directly in the window name:
 
 ```
-[session] 0:frontend ○ 1:backend ● 2:docs ◉
+[session] 0:frontend 🟢 1:backend 🟡 2:docs 🔵
 ```
 
 Perfect for the **one-window philosophy** - run one OpenCode per window and see all states in your window list!
@@ -97,6 +97,13 @@ set -g status-right '#{opencode_status} | %H:%M %d-%b'
 2. **Add to your `.tmux.conf`:**
    ```tmux
    set -g @plugin 'IFAKA/tmux-opencode-status'
+   
+   # Use colored emojis for better visibility (recommended)
+   set -g @opencode_icon_idle "🟢"
+   set -g @opencode_icon_busy "🟡"
+   set -g @opencode_icon_waiting "🔵"
+   set -g @opencode_icon_error "🔴"
+   
    setw -g automatic-rename on
    set -g status-right '#($HOME/.tmux/plugins/tmux-opencode-status/scripts/window_monitor.sh)%H:%M'
    ```
@@ -119,10 +126,10 @@ set -g status-right '#{opencode_status} | %H:%M %d-%b'
 
 5. **See the magic:**
    ```
-   [session] 0:frontend ○ 1:backend ●
+   [session] 0:frontend 🟢 1:backend 🟡
    ```
    
-   Each window shows its own OpenCode state!
+   Each window shows its own OpenCode state with colored emojis!
 
 ## Usage
 
@@ -163,12 +170,26 @@ All options are optional and have sensible defaults.
 
 ### Icons
 
+**Recommended: Colored Emojis (Best Visibility)**
+
 ```tmux
-set -g @opencode_icon_idle "○"      # Idle state icon
-set -g @opencode_icon_busy "●"      # Busy/processing icon
-set -g @opencode_icon_waiting "◉"   # Waiting for input icon
-set -g @opencode_icon_error "✗"     # Error state icon
+set -g @opencode_icon_idle "🟢"      # Green circle - Idle/ready
+set -g @opencode_icon_busy "🟡"      # Yellow circle - Busy/processing
+set -g @opencode_icon_waiting "🔵"   # Blue circle - Waiting for input
+set -g @opencode_icon_error "🔴"     # Red circle - Error
 ```
+
+**Alternative: Unicode Characters (Monochrome)**
+
+```tmux
+set -g @opencode_icon_idle "○"      # Empty circle
+set -g @opencode_icon_busy "●"      # Filled circle
+set -g @opencode_icon_waiting "◉"   # Double circle
+set -g @opencode_icon_error "✗"     # X mark
+```
+
+**Note:** In window-based display mode, tmux cannot apply dynamic colors to window names. 
+Use colored emojis (🟢🟡🔵🔴) for colored icons, or Unicode characters will appear monochrome.
 
 ### Colors
 
